@@ -1,0 +1,164 @@
+---
+title: "RepResearch_Assignment2"
+author: "dortje"
+date: "8 Juli 2017"
+output: html_document
+---
+
+<!-- 
+current_wd <- getwd()
+setwd(file.path(current_wd, "Reproducible_Research", "week4_assignment", "RepResearch_Assigment2"))
+-->
+
+<!--
+Link to data: Storm Data: https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2
+
+Links to Documentations of database:
+
+National Weather Service Storm Data Documentation: https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf
+
+National Climatic Data Center Storm Events FAQ: https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2FNCDC%20Storm%20Events-FAQ%20Page.pdf
+-->
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Synopsis
+at most 10 sentences
+
+## Data Processing
+We obtained the data from the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database. Within the comment you can see the download command. Once obtained, we read in the data directly from the zipped file.
+```{r download_data}
+# download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2","repdata_data_StormData.csv.bz2")
+storm_data <- read.csv("repdata_data_Stormdata.csv.bz2", sep=",", header=TRUE)
+```
+First, we examine the storm data:
+```{r examine_data}
+dim(storm_data)
+str(storm_data)
+head(storm_data)
+```
+We can see that the data set contains 37 variables with a total of 902297 observations. I fixed one column name since it had some unecessary underscores at the end.
+```{r fix_colname}
+colnames(storm_data)[1] <- "STATE"
+colnames(storm_data)
+```
+Then I convert the date column to a date datatype.
+```{r fix_datatypes}
+storm_data$BGN_DATE <- as.Date(storm_data$BGN_DATE, format="%m/%d%Y %H:%M:%S")
+```
+Now, let's have a look at the evtype column, since this is an interesting one for us. Let's print all the factor levels:
+```{r examine_evtype}
+levels(storm_data$evtype)
+```
+Those are a lot, so I will clean up that column to reduce the levels and to have a decent amount of actual ebvent types.
+```{r examine_evtype}
+event_types <- storm_data$EVTYPE
+event_types <- trimws(event_types)
+event_types <- toupper(event_types)
+event_types <- gsub("FUNNEL","TORNADO",event_types)
+event_types <- gsub("SPOUT","TORNADO",event_types)
+event_types <- gsub(".*TORNADO.*","TORNADO",event_types)
+event_types <- gsub(".*HURRICANE.*","HURRICANE",event_types)
+event_types <- gsub(".*NON.*TSTM","",event_types)
+event_types <- gsub("TSTM","THUNDERSTORM",event_types)
+event_types <- gsub("THUNDER","THUNDERSTORM",event_types)
+event_types <- gsub("THUNDESTORM","THUNDERSTORM",event_types)
+event_types <- gsub("THUNDEERSTORM","THUNDERSTORM",event_types)
+event_types <- gsub("LIGHTING","THUNDERSTORM",event_types)
+event_types <- gsub("LIGHTNING","THUNDERSTORM",event_types)
+event_types <- gsub("GUSTNADO","THUNDERSTORM",event_types)
+event_types <- gsub("MICROBURST","THUNDERSTORM",event_types)
+event_types <- gsub(".*THUNDERSTORM.*","THUNDERSTORM",event_types)
+event_types <- gsub(".*ICE.*STORM.*","BLIZZARD",event_types)
+event_types <- gsub(".*SNOW.*WIND.*","BLIZZARD",event_types)
+event_types <- gsub(".*WIND.*SNOW.*","BLIZZARD",event_types)
+event_types <- gsub(".*SNOW.*STORM.*","BLIZZARD",event_types)
+event_types <- gsub("BLOWING SNOW","BLIZZARD",event_types)
+event_types <- gsub(".*BLIZZARD.*","BLIZZARD",event_types)
+event_types <- gsub("BLOW-OUT TIDE","LOW TIDE",event_types)
+event_types <- gsub(".*LOW TIDE.*","LOW TIDE",event_types)
+event_types <- gsub("DRY","DROUGHT",event_types)
+event_types <- gsub("DRIEST","DROUGHT",event_types)
+event_types <- gsub("HEAT","DROUGHT",event_types)
+event_types <- gsub("HIGH TEMP","DROUGHT",event_types)
+event_types <- gsub("HOT","DROUGHT",event_types)
+event_types <- gsub("WARM","DROUGHT",event_types)
+event_types <- gsub(".*DROUGHT.*","DROUGHT",event_types)
+event_types <- gsub(".*HAIL.*","HAIL",event_types)
+event_types <- gsub("AVALANCE","AVALANCHE",event_types)
+event_types <- gsub("AVALANCE","AVALANCHE",event_types)
+event_types <- gsub("LANDSLUMP","LANDSLIDE",event_types)
+event_types <- gsub(".*SLIDE.*","LANDSLIDE",event_types)
+event_types <- gsub(".*LANDSLIDE.*","LANDSLIDE",event_types)
+event_types <- gsub(".*AVALANCHE.*","AVALANCHE",event_types)
+event_types <- gsub("EROS","FLOOD",event_types)
+event_types <- gsub("HIGH TIDE","FLOOD",event_types)
+event_types <- gsub("SWELL","FLOOD",event_types)
+event_types <- gsub("FLOOOD","FLOOD",event_types)
+event_types <- gsub("SURF","FLOOD",event_types)
+event_types <- gsub("HIGH SEA","FLOOD",event_types)
+event_types <- gsub("WAVE","FLOOD",event_types)
+event_types <- gsub("HIGH WATER","FLOOD",event_types)
+event_types <- gsub("STREAM","FLOOD",event_types)
+event_types <- gsub("STRM","FLOOD",event_types)
+event_types <- gsub("FLDG","FLOOD",event_types)
+event_types <- gsub("CURRENT","FLOOD",event_types)
+event_types <- gsub(".*FLOOD.*","FLOOD",event_types)
+event_types <- gsub("CHILL","COLD",event_types)
+event_types <- gsub("FROST","COLD",event_types)
+event_types <- gsub("GLAZE","COLD",event_types)
+event_types <- gsub("HYPOTHERMIA","COLD",event_types)
+event_types <- gsub("HYPERTHERMIA","COLD",event_types)
+event_types <- gsub("FREEZ","COLD",event_types)
+event_types <- gsub("LOW TEMP","COLD",event_types)
+event_types <- gsub("WINT","COLD",event_types)
+event_types <- gsub(".*COLD.*","COLD",event_types)
+event_types <- gsub("ICE","SNOW/ICE",event_types)
+event_types <- gsub("ICY","SNOW/ICE",event_types)
+event_types <- gsub("SNOW","SNOW/ICE",event_types)
+event_types <- gsub(".*SNOW/ICE.*","SNOW/ICE",event_types)
+event_types <- gsub("WET","RAIN",event_types)
+event_types <- gsub("SHOWER","RAIN",event_types)
+event_types <- gsub(".*PRECIP.*","RAIN",event_types)
+event_types <- gsub(".*RAIN.*","RAIN",event_types)
+event_types <- gsub("WND","WIND",event_types)
+event_types <- gsub(".*GUSTY.*","WIND",event_types)
+event_types <- gsub(".*WIND.*","WIND",event_types)
+event_types <- gsub(" STORM","WIND",event_types)
+event_types <- gsub("^STORM","WIND",event_types)
+event_types <- gsub(".*WIND.*","WIND",event_types)
+event_types <- gsub(".*FIRE.*","FIRE",event_types)
+event_types <- gsub(".*VOLCAN.*","VOLCANIC",event_types)
+
+storm_data$EVTYPE <- factor(event_types)
+str(storm_data$EVTYPE)
+```
+As we can see, there are now only 140 different event types left in the data set.
+
+Since, we're only interested in health-related and economic damage, we can reduce the data set to those columns:
+```{r reduce_columns}
+storm_data_reduced <- storm_data[,c("BGN_DATE","EVTYPE", "FATALITIES", "INJURIES", "CROPDMG", "CROPDMGEXP", "PROPDMG", "PROPDMGEXP")]
+```
+
+<!--describe in words and code + justification for transformations-->
+
+## Other captions
+
+```{r reduce_columns}
+library(dplyr)
+storm_data_agg <- storm_data_reduced %>% group_by(EVTYPE) %>% summarize(sum_cropdmg = sum(CROPDMG, na.rm=TRUE), sum_propdmg = sum(PROPDMG, na.rm=TRUE), sum_dmg_total =sum(CROPDMG+CROPDMG, na.rm=TRUE), sum_fatalities = sum(FATALITIES, na.rm=TRUE), sum_injuries = sum(INJURIES, na.rm=TRUE), sum_health_impact_total = sum(FATALITIES+INJURIES, na.rm=TRUE))
+
+storm_data_agg[with(storm_data_agg, order(-sum_dmg_total)),c("EVTYPE","sum_dmg_total")]
+
+storm_data_agg[with(storm_data_agg, order(-sum_health_impact_total)),c("EVTYPE","sum_health_impact_total")]
+```
+
+Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
+Across the United States, which types of events have the greatest economic consequences?
+Consider writing your report as if it were to be read by a government or municipal manager who might be responsible for preparing for severe weather events and will need to prioritize resources for different types of events. 
+
+At least one plot, at most three figures (one figure can be panel plots)
+
+## Results
